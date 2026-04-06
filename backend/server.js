@@ -7,26 +7,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Import routes
-const authRoutes = require('./routes/auth');
-const propertyRoutes = require('./routes/properties');
-const tenantRoutes = require('./routes/tenants');
-const paymentRoutes = require('./routes/payments');
-const maintenanceRoutes = require('./routes/maintenance');
-const reportRoutes = require('./routes/reports');
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/properties', require('./routes/properties'));
+app.use('/api/tenants', require('./routes/tenants'));
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/maintenance', require('./routes/maintenance'));
+app.use('/api/reports', require('./routes/reports'));
 
-// Use routes
-app.use('/api/auth', authRoutes);
-app.use('/api/properties', propertyRoutes);
-app.use('/api/tenants', tenantRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/maintenance', maintenanceRoutes);
-app.use('/api/reports', reportRoutes);
-
-// Root route
 app.get('/', (req, res) => res.json({ message: 'Rental Management API is running' }));
 
-// Dashboard stats
 app.get('/api/dashboard/stats', async (req, res) => {
   try {
     const totalRent = await pool.query("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status='paid'");
