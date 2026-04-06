@@ -1,0 +1,1 @@
+const { Pool } = require('pg'); const fs = require('fs'); const path = require('path'); require('dotenv').config(); const pool = new Pool({ connectionString: process.env.DATABASE_URL }); (async()=>{ const sql = fs.readFileSync(path.join(__dirname,'../migrations/init.sql'),'utf8'); await pool.query(sql); console.log('✅ Migrations done'); process.exit(0); })();
