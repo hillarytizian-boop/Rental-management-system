@@ -8,14 +8,14 @@ export default function InviteTenantModal({ propertyId, unitId, onClose }) {
   const [loading, setLoading] = useState(false);
 
   const generateInvite = async () => {
-    if (!email) return toast.error('Enter email');
+    if (!email) return toast.error('Enter tenant email');
     setLoading(true);
     try {
       const res = await api.post('/tenants/invite', { email, property_id: propertyId, unit_id: unitId });
       setInviteLink(res.data.inviteLink);
       toast.success('Invite created! Copy the link below.');
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed');
+      toast.error(err.response?.data?.error || 'Failed to create invite');
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,7 @@ export default function InviteTenantModal({ propertyId, unitId, onClose }) {
             <button onClick={() => navigator.clipboard.writeText(inviteLink)} className="neon-btn w-full">Copy Link</button>
           </>
         )}
-        <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white">Close</button>
+        <button onClick={onClose} className="mt-4 text-gray-400 hover:text-white w-full">Close</button>
       </div>
     </div>
   );
