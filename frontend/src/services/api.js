@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://rental-management-system-u2wf.onrender.com/api',
+  baseURL: 'https://rental-management-system-u2wf.onrender.com/api',
 });
 
 const token = localStorage.getItem('token');

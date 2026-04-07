@@ -3,26 +3,44 @@ import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({ totalRent: 0, pending: 0, occupied: 0, vacant: 0 });
   const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/dashboard/stats').then(res => setStats(res.data));
-    api.get('/reports/income').then(res => setChartData(res.data));
+    const fetchData = async () => {
+      try {
+        const statsRes = await api.get('/dashboard/stats');
+        setStats(statsRes.data);
+        const chartRes = await api.get('/reports/income');
+        setChartData(chartRes.data);
+      } catch (err) {
+        console.error('Dashboard error:', err);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading dashboard...</div>;
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
       <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">Dashboard, {user?.name}</h1>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: 'Total Rent Collected', value: `KES ${stats.totalRent.toLocaleString()}`, icon: '💰', color: 'cyan' },
-          { label: 'Pending Payments', value: `KES ${stats.pending.toLocaleString()}`, icon: '⏳', color: 'yellow' },
-          { label: 'Occupied Units', value: stats.occupied, icon: '🏠', color: 'green' },
-          { label: 'Vacant Units', value: stats.vacant, icon: '🔲', color: 'red' }
+          { label: 'Total Rent Collected', value: `KES ${stats.totalRent?.toLocaleString() || 0}`, icon: '💰' },
+          { label: 'Pending Payments', value: `KES ${stats.pending?.toLocaleString() || 0}`, icon: '⏳' },
+          { label: 'Occupied Units', value: stats.occupied || 0, icon: '🏠' },
+          { label: 'Vacant Units', value: stats.vacant || 0, icon: '🔲' }
         ].map((item, idx) => (
           <div key={idx} className="floating-card p-6 flex justify-between items-center">
             <div><p className="text-gray-300 text-sm">{item.label}</p><p className="text-3xl font-bold">{item.value}</p></div>
