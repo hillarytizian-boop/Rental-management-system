@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: rental-frontend
+    runtime: static
+    repo: https://github.com/hillarytizian-boop/Rental-management-system
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
