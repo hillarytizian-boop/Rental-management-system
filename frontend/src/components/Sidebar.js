@@ -1,18 +1,33 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { FaTachometerAlt, FaBuilding, FaUsers, FaCreditCard, FaWrench, FaChartLine, FaSignOutAlt } from 'react-icons/fa';
-
-const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: FaTachometerAlt },
-  { to: '/properties', label: 'Properties', icon: FaBuilding },
-  { to: '/tenants', label: 'Tenants', icon: FaUsers },
-  { to: '/payments', label: 'Payments', icon: FaCreditCard },
-  { to: '/maintenance', label: 'Maintenance', icon: FaWrench },
-  { to: '/reports', label: 'Reports', icon: FaChartLine },
-];
+import { FaTachometerAlt, FaBuilding, FaUsers, FaCreditCard, FaWrench, FaChartLine, FaSignOutAlt, FaUserShield } from 'react-icons/fa';
 
 export default function Sidebar() {
   const { logout, user } = useAuth();
+  const role = user?.role;
+
+  const navItems = [];
+  if (role === 'admin') {
+    navItems.push({ to: '/dashboard', label: 'Dashboard', icon: FaTachometerAlt });
+    navItems.push({ to: '/admin', label: 'Admin Panel', icon: FaUserShield });
+    navItems.push({ to: '/properties', label: 'Properties', icon: FaBuilding });
+    navItems.push({ to: '/tenants', label: 'Tenants', icon: FaUsers });
+    navItems.push({ to: '/payments', label: 'Payments', icon: FaCreditCard });
+    navItems.push({ to: '/maintenance', label: 'Maintenance', icon: FaWrench });
+    navItems.push({ to: '/reports', label: 'Reports', icon: FaChartLine });
+  } else if (role === 'landlord') {
+    navItems.push({ to: '/dashboard', label: 'Dashboard', icon: FaTachometerAlt });
+    navItems.push({ to: '/properties', label: 'Properties', icon: FaBuilding });
+    navItems.push({ to: '/tenants', label: 'Tenants', icon: FaUsers });
+    navItems.push({ to: '/payments', label: 'Payments', icon: FaCreditCard });
+    navItems.push({ to: '/maintenance', label: 'Maintenance', icon: FaWrench });
+    navItems.push({ to: '/reports', label: 'Reports', icon: FaChartLine });
+  } else if (role === 'tenant') {
+    navItems.push({ to: '/dashboard', label: 'Dashboard', icon: FaTachometerAlt });
+    navItems.push({ to: '/payments', label: 'Payments', icon: FaCreditCard });
+    navItems.push({ to: '/maintenance', label: 'Maintenance', icon: FaWrench });
+  }
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 glass rounded-r-3xl flex flex-col">
       <div className="p-6 text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
