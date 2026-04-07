@@ -5,10 +5,16 @@ import toast from 'react-hot-toast';
 
 export default function Properties() {
   const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', address: '', total_units: 0, image_url: '' });
 
-  useEffect(() => { api.get('/properties').then(res => setProperties(res.data)); }, []);
+  useEffect(() => {
+    api.get('/properties').then(res => {
+      setProperties(res.data);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,6 +26,8 @@ export default function Properties() {
       toast.success('Property added');
     } catch (err) { toast.error(err.response?.data?.error); }
   };
+
+  if (loading) return <div className="text-white p-6">Loading properties...</div>;
 
   return (
     <div className="p-6">
