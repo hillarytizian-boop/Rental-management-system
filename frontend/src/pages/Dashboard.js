@@ -16,8 +16,15 @@ export default function Dashboard() {
         api.get('/dashboard/stats').catch(() => ({ data: { totalRent: 0, pending: 0, occupied: 0, vacant: 0 } })),
         api.get('/reports/income').catch(() => ({ data: [] }))
       ]).then(([statsRes, chartRes]) => {
-        setStats(statsRes.data);
-        setChartData(chartRes.data);
+        // Ensure values are numbers (not null)
+        const safeStats = {
+          totalRent: statsRes.data?.totalRent ?? 0,
+          pending: statsRes.data?.pending ?? 0,
+          occupied: statsRes.data?.occupied ?? 0,
+          vacant: statsRes.data?.vacant ?? 0
+        };
+        setStats(safeStats);
+        setChartData(Array.isArray(chartRes.data) ? chartRes.data : []);
         setLoading(false);
       });
     } else if (!authLoading) {
