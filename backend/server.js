@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
-
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -16,10 +17,7 @@ app.use('/api/maintenance', require('./routes/maintenance'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/admin', require('./routes/admin'));
 
-app.get('/api/dashboard/stats', async (req, res) => {
-  res.json({ totalRent: 0, pending: 0, occupied: 0, vacant: 0 });
-});
-
+app.get('/api/dashboard/stats', (req, res) => res.json({ totalRent:0, pending:0, occupied:0, vacant:0 }));
 app.get('/', (req, res) => res.send('Backend OK'));
 
 const PORT = process.env.PORT || 5000;
