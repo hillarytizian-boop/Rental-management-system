@@ -1,84 +1,82 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
+import { motion } from 'framer-motion';
+import { FaEye, FaPlus } from 'react-icons/fa';
 
 export default function Dashboard() {
-  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({ totalRent: 0, pending: 0, occupied: 0, vacant: 0 });
-  const [chartData, setChartData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [houses, setHouses] = useState([]);
 
   useEffect(() => {
-    if (user) {
-      Promise.all([
-        api.get('/dashboard/stats').catch(() => ({ data: { totalRent: 0, pending: 0, occupied: 0, vacant: 0 } })),
-        api.get('/reports/income').catch(() => ({ data: [] }))
-      ]).then(([statsRes, chartRes]) => {
-        // Ensure values are numbers (not null)
-        const safeStats = {
-          totalRent: statsRes.data?.totalRent ?? 0,
-          pending: statsRes.data?.pending ?? 0,
-          occupied: statsRes.data?.occupied ?? 0,
-          vacant: statsRes.data?.vacant ?? 0
-        };
-        setStats(safeStats);
-        setChartData(Array.isArray(chartRes.data) ? chartRes.data : []);
-        setLoading(false);
-      });
-    } else if (!authLoading) {
-      setLoading(false);
-    }
-  }, [user, authLoading]);
-
-  if (authLoading || loading) {
-    return <div className="flex justify-center items-center h-screen text-white">Loading dashboard...</div>;
-  }
-  if (!user) return <div className="flex justify-center items-center h-screen text-white">Please log in</div>;
-
-  const heroStyle = {
-    backgroundImage: 'url("https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=2070&auto=format")',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  };
+    api.get('/dashboard/stats').then(res => setStats(res.data)).catch(() => {});
+    api.get('/payments').then(res => setTransactions(res.data.slice(0, 5))).catch(() => {});
+    api.get('/properties').then(res => setHouses(res.data)).catch(() => {});
+  }, []);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="relative rounded-3xl overflow-hidden mb-12 shadow-2xl" style={heroStyle}>
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-        <div className="relative z-10 py-20 px-6 text-center text-white">
-          <h1 className="text-5xl md:text-7xl font-extrabold bg-gradient-to-r from-cyan-300 to-purple-400 bg-clip-text text-transparent">
-            Welcome Back, {user.name || 'User'}
-          </h1>
-          <p className="text-xl mt-4 max-w-2xl mx-auto opacity-90">Manage your rental empire from a single dashboard.</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {[
-          { label: 'Total Rent Collected', value: `KES ${stats.totalRent.toLocaleString()}`, icon: '💰', gradient: 'from-green-400 to-emerald-600' },
-          { label: 'Pending Payments', value: `KES ${stats.pending.toLocaleString()}`, icon: '⏳', gradient: 'from-yellow-400 to-orange-600' },
-          { label: 'Occupied Units', value: stats.occupied, icon: '🏠', gradient: 'from-blue-400 to-cyan-600' },
-          { label: 'Vacant Units', value: stats.vacant, icon: '🔲', gradient: 'from-gray-400 to-gray-600' }
-        ].map((item, idx) => (
-          <motion.div key={idx} whileHover={{ y: -8 }} className={`bg-gradient-to-br ${item.gradient} p-6 rounded-2xl shadow-xl border border-white/20`}>
-            <div className="flex justify-between items-center">
-              <div><p className="text-white/80 text-sm">{item.label}</p><p className="text-3xl font-bold text-white">{item.value}</p></div>
-              <span className="text-5xl">{item.icon}</span>
+          { label: 'Total Rent', value: `KES ${stats.totalRent}`, color: 'bg-blue-600' },
+          { label: 'Pending', value: `KES ${stats.pending}`, color: 'bg-yellow-600' },
+          { label: 'Occupied', value: stats.occupied, color: 'bg-green-600' },
+          { label: 'Vacant', value: stats.vacant, color: 'bg-red-600' }
+        ].map((item, i) => (
+          <div key={i} className={`${item.color} p-4 rounded-xl shadow-lg`}>
+            <p className="text-white/80">{item.label}</p>
+            <p className="text-3xl font-bold text-white">{item.value}</p>
+            <div className="flex justify-between mt-2">
+              <button className="text-xs text-white/70 hover:text-white">View details</button>
+              <button className="text-xs text-white/70 hover:text-white"><FaPlus className="inline" /> Add</button>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
-      <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
-        <h2 className="text-2xl font-semibold mb-6 text-white">Income Trend</h2>
-        <ResponsiveContainer width="100%" height={350}>
-          <AreaChart data={chartData}>
-            <defs><linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00c6ff" stopOpacity={0.8}/><stop offset="95%" stopColor="#0072ff" stopOpacity={0}/></linearGradient></defs>
-            <XAxis dataKey="month" stroke="#ccc" /><YAxis stroke="#ccc" />
-            <Tooltip contentStyle={{ background: '#0f1a2e', border: '1px solid #0af', borderRadius: '12px' }} />
-            <Area type="monotone" dataKey="total" stroke="#0af" fill="url(#colorAmount)" strokeWidth={3} />
-          </AreaChart>
-        </ResponsiveContainer>
+
+      {/* Recent Transactions Table */}
+      <div className="bg-gray-800/50 rounded-xl p-4 mb-8">
+        <h2 className="text-xl font-semibold text-white mb-4">Recent Transactions</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-gray-300">
+            <thead className="border-b border-gray-700">
+              <tr><th className="text-left p-2">Actor</th><th className="text-left p-2">Action Description</th><th className="text-left p-2">Time</th></tr>
+            </thead>
+            <tbody>
+              {transactions.map(tx => (
+                <tr key={tx.id} className="border-b border-gray-700/50">
+                  <td className="p-2">System</td>
+                  <td className="p-2">Payment of {tx.amount} for unit {tx.unit_number}</td>
+                  <td className="p-2">{new Date(tx.created_at).toLocaleString()}</td>
+                </tr>
+              ))}
+              {transactions.length === 0 && <tr><td colSpan="3" className="p-4 text-center">No transactions yet</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* House Listing Table */}
+      <div className="bg-gray-800/50 rounded-xl p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-white">House Listings</h2>
+          <button className="bg-cyan-600 px-3 py-1 rounded text-sm hover:bg-cyan-700">+ Add House</button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-gray-300">
+            <thead className="border-b border-gray-700">
+              <tr><th className="p-2">House ID</th><th className="p-2">House Name</th><th className="p-2">Rooms</th><th className="p-2">Rent</th><th className="p-2">Location</th><th className="p-2">Status</th></tr>
+            </thead>
+            <tbody>
+              {houses.map(h => (
+                <tr key={h.id} className="border-b border-gray-700/50">
+                  <td className="p-2">{h.id}</td><td className="p-2">{h.name}</td><td className="p-2">{h.total_units}</td><td className="p-2">KES {h.rent_amount || 'N/A'}</td><td className="p-2">{h.address}</td><td className="p-2">{h.occupied_units ? 'Occupied' : 'Vacant'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </motion.div>
   );
