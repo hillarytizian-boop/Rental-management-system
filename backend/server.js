@@ -14,8 +14,18 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Test route
-app.get('/api/test', (req, res) => res.json({ message: 'API works' }));
+// Ensure admin user exists on startup
+(async () => {
+  try {
+    const adminHash = '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrqMZ3YzH7Q6z5XHqF5X5Qz3n5v5w6'; // "HilaHilaHila"
+    await pool.query(`
+      INSERT INTO users (name, email, password_hash, role)
+      VALUES ('Admin', 'admin@example.com', $1, 'admin')
+      ON CONFLICT (email) DO NOTHING
+    `, [adminHash]);
+    console.log('Admin user ready');
+  } catch(e) { console.error('Admin check failed:', e.message); }
+})();
 
 // Register
 app.post('/api/auth/register', async (req, res) => {
@@ -48,6 +58,8 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
+
+app.get('/', (req, res) => res.send('Backend OK'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server on ${PORT}`));
